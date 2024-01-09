@@ -1,6 +1,17 @@
 import React, { useState } from 'react'
 import './App.css'
 import FormControl from './FormControl'
+import { Formik } from 'formik';
+import {object, string, number} from 'yup'
+
+const driverInfoSchema = object({
+  Name: string().required('please input your name'),
+  Age: number().min(18, 'Min age should be 18').max(60).required('Please input your age'),
+  LicenseType: string().required(),
+  ID: string().matches(/^[0-9]+$/, "Must be only digits")
+  .min(16, 'Must be exactly 16 digits')
+  .max(16, 'Must be exactly 16 digits')
+})
 
 interface DriverInfo {
   Name: string;
@@ -18,54 +29,66 @@ const LicenseTypes = [
 function App() {
   const [count, setCount] = useState<number>(0)
 
-  const [driverInfo, setDriverInfo] = useState<DriverInfo>({
+  const [driverInfo] = useState<DriverInfo>({
     Name: "",
     Age: "",
     LicenseType: "",
     ID: "",
   });
 
-  const onInputChange  = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setDriverInfo((prev: DriverInfo) => ({...prev, [e.target.name]: e.target.value }));
-  }
-
-  const onSubmit = () => {
+  const onSubmit = (values: DriverInfo, { setSubmitting }) => {
+    driverInfoSchema()
      setCount((count) => count + 1);
-     alert('Driver Info: ' + JSON.stringify(driverInfo));
+     setTimeout(() => {
+     alert('Driver Info: ' + JSON.stringify(values, null, 2));
+      setSubmitting(false);
+    }, 400);
   }
 
   return (
     <>
       <h1>DL Application Form</h1>
       <div className="card">
-        <FormControl
-          type="textbox"
-          name="Name"
-          value={driverInfo.Name}
-          onChange={onInputChange}
-        />
-        <FormControl
-          type="textbox"
-          name="Age"
-          value={driverInfo.Age}
-          onChange={onInputChange}
-        />
-        <FormControl
-          type="dropdown"
-          name="LicenseType"
-          value={driverInfo.LicenseType}
-          onChange={onInputChange}
-          options={LicenseTypes}
-        />
-        <FormControl
-          type="textbox"
-          name="ID"
-          value={driverInfo.ID}
-          onChange={onInputChange}
-        />
-        <button onClick={onSubmit}>
-          Submit {count}
-        </button>
+        <Formik initialValues={driverInfo} onSubmit={onSubmit}>
+          {({
+            values,
+            handleChange,
+            handleSubmit,
+            isSubmitting,
+            /* and other goodies */
+          }) => (
+            <form onSubmit={handleSubmit}>
+              <FormControl
+                type="textbox"
+                name="Name"
+                value={values.Name}
+                onChange={handleChange}
+              />
+              <FormControl
+                type="textbox"
+                name="Age"
+                value={values.Age}
+                onChange={handleChange}
+              />
+              <FormControl
+                type="dropdown"
+                name="LicenseType"
+                value={values.LicenseType}
+                onChange={handleChange}
+                options={LicenseTypes}
+              />
+              <FormControl
+                type="textbox"
+                name="ID"
+                value={values.ID}
+                onChange={handleChange}
+              />
+              <button type="submit" disabled={isSubmitting}>
+                Submit {count}
+              </button>
+            </form>
+          )}
+        </Formik>
       </div>
       <p className="read-the-docs">
         Click on the Vite and React logos to learn more
